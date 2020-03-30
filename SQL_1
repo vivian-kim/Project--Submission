@@ -1,0 +1,77 @@
+Query 1)
+
+ SELECT f.title, c.name, COUNT(r.rental_id) AS total_rent
+ FROM category AS c
+   JOIN film_category AS fc
+   ON c.category_id = fc.category_id
+   AND c.name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music')
+
+   JOIN film AS f
+   ON f.film_id = fc.film_id
+
+   JOIN inventory AS i
+   ON f.film_id = i.film_id
+
+   JOIN rental AS r
+   ON i.inventory_id = r.inventory_id
+ 
+ GROUP BY 1, 2
+ ORDER BY 2, 1;
+
+--------------------------------------------------------------------
+Query 2)
+
+Select f.title,c.name,f.rental_duration,NTILE(4) OVER(Order by f.rental_duration) AS standard_quartile
+
+From category AS c
+JOIN film_category AS fc
+ON c.category_id =fc.category_id
+
+JOIN film As f
+On f.film_id =fc.film_id
+WHERE c.name IN ('Animation', 'Children','Classics','Comedy', 'Family','Music')
+
+ORDER BY 3
+
+--------------------------------------------------------------------------------------
+Query 3) 
+
+SELECT t1.name, t1.standard_quartile as each_quartile, COUNT(t1.standard_quartile) as Count_of_movies
+FROM(SELECT f.rental_duration, f.title, c.name , NTILE(4) OVER (ORDER BY f.rental_duration) AS standard_quartile
+FROM film_category fc
+JOIN film f
+ON f.film_id = fc.film_id
+     
+JOIN category c
+ON c.category_id = fc.category_id
+     
+WHERE c.name IN ('Animation', 'Children', 'Classics', 'Comedy', 'Family', 'Music')) t1 
+GROUP BY 1, 2
+ORDER BY 1, 2
+
+--------------------------------------------------------------------------------------------
+Query 4
+
+SELECT DATE_TRUNC('Month', p.payment_date) pay_month, concat(c.first_name,' ', c.last_name) AS Full_Name, COUNT(p.amount) AS pay_count, SUM(p.amount) AS pay_total
+
+FROM customer c
+JOIN payment p
+ON p.customer_id = c.customer_id
+WHERE concat(c.first_name,' ', c.last_name) IN
+(SELECT t1.Full_Name
+FROM
+(SELECT concat(c.first_name,' ', c.last_name) AS Full_Name, SUM(p.amount) as pay_total
+ 
+FROM customer c
+JOIN payment p
+ON p.customer_id = c.customer_id
+
+GROUP BY 1	
+ORDER BY 2 DESC
+LIMIT 10) t1) AND (p.payment_date BETWEEN '2007-01-01' AND '2007-12-31')
+GROUP BY 2, 1
+ORDER BY 2 DESC
+
+
+
+
